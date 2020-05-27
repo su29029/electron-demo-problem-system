@@ -109,7 +109,7 @@ export default {
             let that = this;
             that.isShowProgress = true;
             that.isConfirming = true;
-            that.$request.post('/selectProblem', {"user":{"username":that.$store.state.user}, "language":that.language, "difficulty":that.difficulty, "problemNumber":that.problemNumber}).then( ret => {
+            that.$request.post('/selectProblem', {"user":{"username":that.$store.state.user}, "language":that.problemStatus.language, "difficulty":that.problemStatus.difficulty, "problemNumber":that.problemNumber}).then( ret => {
                 if (ret.data.msg == "Not Support") {
                     alert("暂不支持该语言，敬请期待！");
                     that.$router.push('/index').catch( err => console.log(err));
@@ -121,7 +121,17 @@ export default {
                     that.isShowProblemZone = {display: "block"};
                     
                     that.comp = that.generateProblem(ret);
-                    that.comp.selected = Infinity;
+                    if (ret.data.problemType == "select"){
+                        that.currentProblemType = "select";
+                        that.comp.selected = Infinity;
+                    } else if (ret.data.problemType == "multi"){
+                        that.currentProblemType = "multi";
+                        that.comp.selected = Infinity;
+                    }
+                    else {
+                        that.currentProblemType = "other";
+                        that.comp.answer = "";
+                    }
                     that.problemNo++;
                     console.log(that.comp);
                 }).catch( err => {
@@ -134,9 +144,9 @@ export default {
                 })
           }).catch( err => {
                 that.isShowProgress = false;
-                that.isButtonLoading = false;
+                that.isConfirming = false;
                 that.isShowAlert = true;
-                that.selectResult = "Something error.Please check your network and try again.";
+                that.problemAlert = "Something error.Please check your network and try again.";
                 setTimeout(() => that.isShowAlert = false,2500);
                 console.log(err);
           });
@@ -150,8 +160,17 @@ export default {
                 that.isShowProgress = true;
                 that.isLoading = true;
             }
-            console.log("that.comp.selected:" + that.comp.selected);
-            that.$store.state.answer[that.problemNo] = that.comp.selected >= 0 ? that.comp.selected : Infinity;
+            if (that.currentProblemType == "select" ){
+                console.log("that.comp.selected:" + that.comp.selected);
+                that.$store.state.answer[that.problemNo] = that.comp.selected >= 0 ? that.comp.selected : Infinity;
+            } else if (that.currentProblemType == "multi") {
+                console.log("that.comp.selected:" + that.comp.selected);
+                that.$store.state.answer[that.problemNo] = that.comp.selected.length > 0 ? that.comp.selected.sort((a,b) => {return a - b}).toString() : Infinity;
+            } else {
+                console.log("that.comp.answer:" + that.comp.answer);
+                that.$store.state.answer[that.problemNo] = that.comp.answer;
+            }
+            
             if ((flag == 1 && that.problemNo <= that.problemNumber) || (flag == -1 && that.problemNo > 1)){
                 that.$request.get('/getProblem?flag=' + flag).then( ret => {
                     that.comp = that.generateProblem(ret);
@@ -159,9 +178,20 @@ export default {
                     if (ret.data.problemType == "select"){
                         that.currentProblemType = "select";
                         that.$store.state.answer[that.problemNo] >= 0 ? that.comp.selected = that.$store.state.answer[that.problemNo] : that.comp.selected = Infinity;
+                    } else if (ret.data.problemType == "multi"){
+                        that.currentProblemType = "multi";
+                        if (that.$store.state.answer[that.problemNo]){
+                            let answer = that.$store.state.answer[that.problemNo].split(',');
+                            for(let i = 0; i < answer.length; i++) {
+                                answer[i] = parseInt(answer[i]);
+                            }
+                            that.$store.state.answer[that.problemNo] = answer;
+                        } else {
+                            that.$store.state.answer[that.problemNo] = -1;
+                        }       
                     } else if (ret.data.problemType == "other"){
                         that.currentProblemType = "other";
-                        that.$store.state.answer[that.problemNo] >= 0 ? that.comp.answer = that.$store.state.answer[that.problemNo] : that.comp.answer = "";
+                        that.$store.state.answer[that.problemNo] ? that.comp.answer = that.$store.state.answer[that.problemNo] : that.comp.answer = "";
                     }
                     that.isShowProgress = false;
                     that.isLoading = false;
@@ -201,7 +231,7 @@ export default {
             } else if (ret.data.problemType == "other"){
                 that.problemContent = ret.data.problemContent;
                 let Action = Vue.extend(OtherProblem);
-                comp = new Action({}).$mount("answeringZone");
+                comp = new Action({}).$mount("#answeringZone");
             }
             
             return comp;

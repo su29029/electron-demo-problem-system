@@ -1,6 +1,6 @@
 <template>
     <v-container fluid>
-        <v-textarea label="请输入.." auto-grow clearable v-model="answer"></v-textarea>
+        <v-text-field label="请输入.." outlined single-line v-model="answer"></v-text-field>
     </v-container>
 </template>
 

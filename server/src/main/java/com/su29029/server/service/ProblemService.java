@@ -30,7 +30,10 @@ public class ProblemService {
         previousProblemId = new ArrayList<Integer>();
         problemAnswer = new HashMap<Integer, String>();
         language = userSelectedProblemInformation.getLanguage();
-        if ((!language.equals("C"))&&(!language.equals("JavaScript"))) return new Message("Not Support", 400);
+        System.out.println(userSelectedProblemInformation.getLanguage());
+        System.out.println(userSelectedProblemInformation.getDifficulty());
+        System.out.println(userSelectedProblemInformation.getProblemNumber());
+        if (!language.equals("C")) return new Message("Not Support", 400);
         for(int i = 0; i < userSelectedProblemInformation.getProblemNumber();){
             int id = new Random().nextInt(20);
             if (nextProblemId.indexOf(id) == -1 && id != 0){
@@ -54,17 +57,20 @@ public class ProblemService {
         System.out.println("nextProblemId" + nextProblemId.toString());
         int current = previousProblemId.get(previousProblemId.size() - 1);
         System.out.println("current:" + current);
-        String problemType = problemDao.checkProblemType(language,current);
+        String chart = "problem_language_" + language;
+        
+        String problemType = problemDao.checkProblemType(chart,current);
         System.out.println(problemType);
+        
         if (problemType.equals("select") || problemType.equals("multi")){
             SelectProblem problem = new SelectProblem();
-            problem = problemDao.getSelectProblemById("problem_language_" + language, current);
+            problem = problemDao.getSelectProblemById(chart, current);
             problemAnswer.put(current, problem.getAnswer());
             problem.setAnswer("");
             return problem;
         } else {
             OtherProblem problem = new OtherProblem();
-            problem = problemDao.getOtherProblemById("problem_language_" + language, current);
+            problem = problemDao.getOtherProblemById(chart, current);
             problemAnswer.put(current, problem.getAnswer());
             problem.setAnswer("");
             return problem;

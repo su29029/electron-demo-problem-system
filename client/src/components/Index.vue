@@ -49,7 +49,7 @@ export default {
     },
     data: () => ({
       items:{
-        language:["C","C++(暂未开放)","JavaScript","Java(暂未开放)","PHP(暂未开放)","Golang(暂未开放)","Python(暂未开放)","Rust(暂未开放)","Ruby(暂未开放)","C#(暂未开放)"],
+        language:["C","C++(暂未开放)","JavaScript(暂未开放)","Java(暂未开放)","PHP(暂未开放)","Golang(暂未开放)","Python(暂未开放)","Rust(暂未开放)","Ruby(暂未开放)","C#(暂未开放)"],
         difficulty:["baby","easy","normal","hard"],
         problemNumber:["5","10"]
       },
@@ -70,7 +70,7 @@ export default {
           return ;
         }
         if (that.language && that.difficulty && that.problemNumber){
-          if (that.language != "C" && that.language != "JavaScript") {
+          if (that.language != "C") {
             alert("暂不支持该语言，敬请期待！");
             return ;
           }
