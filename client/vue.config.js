@@ -21,9 +21,6 @@ module.exports = {
             "url": "http://test.su29029.xyz/" 
           }
         ],
-        "mac": {
-
-        },
         "win": {
           "target": [
             {
