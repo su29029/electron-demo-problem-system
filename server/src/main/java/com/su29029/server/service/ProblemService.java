@@ -23,13 +23,16 @@ public class ProblemService {
     private List<Integer> nextProblemId;
     private List<Integer> previousProblemId;
     private HashMap<Integer,String> problemAnswer;
+    private String language;
 
     public Message prepareProblem(UserSelectedProblemInformation userSelectedProblemInformation){
         nextProblemId = new ArrayList<Integer>();
         previousProblemId = new ArrayList<Integer>();
         problemAnswer = new HashMap<Integer, String>();
+        language = userSelectedProblemInformation.getLanguage();
+        if ((!language.equals("C"))&&(!language.equals("JavaScript"))) return new Message("Not Support", 400);
         for(int i = 0; i < userSelectedProblemInformation.getProblemNumber();){
-            int id = new Random().nextInt(100);
+            int id = new Random().nextInt(20);
             if (nextProblemId.indexOf(id) == -1 && id != 0){
                 nextProblemId.add(id);
                 i++;
@@ -51,17 +54,17 @@ public class ProblemService {
         System.out.println("nextProblemId" + nextProblemId.toString());
         int current = previousProblemId.get(previousProblemId.size() - 1);
         System.out.println("current:" + current);
-        String problemType = problemDao.checkProblemType(current);
+        String problemType = problemDao.checkProblemType(language,current);
         System.out.println(problemType);
-        if (problemType.equals("select") || problemType.equals("multipleSelect")){
+        if (problemType.equals("select") || problemType.equals("multi")){
             SelectProblem problem = new SelectProblem();
-            problem = problemDao.getSelectProblemById(current);
+            problem = problemDao.getSelectProblemById("problem_language_" + language, current);
             problemAnswer.put(current, problem.getAnswer());
             problem.setAnswer("");
             return problem;
         } else {
             OtherProblem problem = new OtherProblem();
-            problem = problemDao.getOtherProblemById(current);
+            problem = problemDao.getOtherProblemById("problem_language_" + language, current);
             problemAnswer.put(current, problem.getAnswer());
             problem.setAnswer("");
             return problem;
@@ -72,9 +75,9 @@ public class ProblemService {
         // 将答案反向，随后根据previousProblemId数组从开始到末尾的id值对应的在problemAnswer中正确答案与获得到的答案进行对比。
         
         int correctNumber = 0;
+        System.out.println(answer.toString());
         for(int i = 0; i < answer.size(); i++){
-            System.out.println(answer.get(i));
-            System.out.println(problemAnswer.get(previousProblemId.get(i)));
+            if (answer.get(i) == null) continue;
             if (answer.get(i).equals(problemAnswer.get(previousProblemId.get(i)))){
                 correctNumber++;
             }

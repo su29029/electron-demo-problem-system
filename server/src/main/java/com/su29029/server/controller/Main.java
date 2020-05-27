@@ -79,15 +79,12 @@ public class Main {
 
     @RequestMapping(value = "/selectProblem", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public Message setProblemOption(@RequestBody UserSelectedProblemInformation userSelectedProblemInformation, HttpServletRequest request, HttpSession session) {
-        System.out.println("user:" + userSelectedProblemInformation.getUser().getUsername() + " is going to take it.");
-        // problemService.getProblemId();
-        // System.out.println(problemService.getProblemId().isEmpty());
+        System.out.println("user:" + userSelectedProblemInformation.getUser().getUsername() + " is ready.");
         return problemService.prepareProblem(userSelectedProblemInformation);
     }
 
     @RequestMapping(value = "/getProblem", method = RequestMethod.GET)
     public Object getProblem(@RequestParam int flag){
-        
         return problemService.getProblemById(flag);
     }
 

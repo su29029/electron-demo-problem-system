@@ -11,7 +11,7 @@ import io.lettuce.core.dynamic.annotation.Param;
 @Repository
 public interface ProblemDao {
 
-    @Select("select * from problems where id = #{id}")
+    @Select("select * from #{language} where id = #{id}")
     @Results({
         @Result(column = "id", property = "id"),
         @Result(column = "problemContent", property = "problemContent"),
@@ -20,9 +20,9 @@ public interface ProblemDao {
         @Result(column = "problemAnswer", property = "problemAnswer"),
         @Result(column = "options", property = "options")
     })
-    SelectProblem getSelectProblemById(@Param("id") int id);
+    SelectProblem getSelectProblemById(@Param("language") String language, @Param("id") int id);
 
-    @Select("select * from problems where id = #{id}")
+    @Select("select * from #{language} where id = #{id}")
     @Results({
         @Result(column = "id", property = "id"),
         @Result(column = "problemContent", property = "problemContent"),
@@ -30,9 +30,9 @@ public interface ProblemDao {
         @Result(column = "problemAnswer", property = "problemAnswer"),
         @Result(column = "problemType", property = "problemType"),
     })
-    OtherProblem getOtherProblemById(@Param("id") int id);
+    OtherProblem getOtherProblemById(@Param("language") String language, @Param("id") int id);
 
-    @Select("select problemType from problems where id = #{id}")
-    String checkProblemType(@Param("id") int id);
+    @Select("select problemType from #{language} where id = #{id}")
+    String checkProblemType(@Param("language") String language, @Param("id") int id);
 
 }

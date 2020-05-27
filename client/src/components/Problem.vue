@@ -4,6 +4,7 @@
             <v-alert :type="problemAlertType" v-if="isShowAlert" style="position:absolute;width:100%;">
                 {{problemAlert}}
             </v-alert>
+            <v-btn @click="$router.push('/index')">返回主页</v-btn>
             <v-card outlined class="mx-auto" style="margin: 0 auto;margin-top:100px;z-index:10" align="center" width="450" min-height="520" ref="main">
                 <v-progress-linear indeterminate color="green" absolute v-if="isShowProgress"></v-progress-linear>
                 <v-card flat v-if="!isConfirmed" :disabled="isConfirming">
@@ -19,11 +20,7 @@
                 
                     <v-card elevation="1" min-height="180" style="margin: 10px;margin-top:20px;">{{problemContent}}</v-card>
 
-                    <v-card elevation="1" min-height="220" style="margin: 10px" ref="answeringZone">
-                        <!-- <SelectProblem :options="options" :isMultiple="isMultiple"></SelectProblem> -->
-                        <!-- <div id="answeringZone"></div> -->
-                        <!-- <v-content ref="answeringZone" id="v-content-asdfasdfasdfasdfasdfasdf"></v-content> -->
-                    </v-card>
+                    <v-card elevation="1" min-height="220" style="margin: 10px" ref="answeringZone"></v-card>
 
                     <v-container>
                         <v-row align-content="end" style="margin: 10px">
@@ -65,8 +62,7 @@
                     </v-container>
                 </v-card>
             </v-card>
-        </v-container>
-            
+        </v-container>        
     </div>
 </template>
 
@@ -114,6 +110,10 @@ export default {
             that.isShowProgress = true;
             that.isConfirming = true;
             that.$request.post('/selectProblem', {"user":{"username":that.$store.state.user}, "language":that.language, "difficulty":that.difficulty, "problemNumber":that.problemNumber}).then( ret => {
+                if (ret.data.msg == "Not Support") {
+                    alert("暂不支持该语言，敬请期待！");
+                    that.$router.push('/index').catch( err => console.log(err));
+                }
                 that.$request.get('/getProblem?flag=1').then( ret => {
                     that.isConfirmed = true;
                     that.isConfirming = false;
@@ -121,6 +121,7 @@ export default {
                     that.isShowProblemZone = {display: "block"};
                     
                     that.comp = that.generateProblem(ret);
+                    that.comp.selected = Infinity;
                     that.problemNo++;
                     console.log(that.comp);
                 }).catch( err => {
@@ -150,14 +151,14 @@ export default {
                 that.isLoading = true;
             }
             console.log("that.comp.selected:" + that.comp.selected);
-            that.$store.state.answer[that.problemNo] = that.comp.selected;
+            that.$store.state.answer[that.problemNo] = that.comp.selected >= 0 ? that.comp.selected : Infinity;
             if ((flag == 1 && that.problemNo <= that.problemNumber) || (flag == -1 && that.problemNo > 1)){
                 that.$request.get('/getProblem?flag=' + flag).then( ret => {
                     that.comp = that.generateProblem(ret);
                     flag == 1 ? that.problemNo++ : that.problemNo--;
                     if (ret.data.problemType == "select"){
                         that.currentProblemType = "select";
-                        that.$store.state.answer[that.problemNo] >= 0 ? that.comp.selected = that.$store.state.answer[that.problemNo] : that.comp.selected = -1;
+                        that.$store.state.answer[that.problemNo] >= 0 ? that.comp.selected = that.$store.state.answer[that.problemNo] : that.comp.selected = Infinity;
                     } else if (ret.data.problemType == "other"){
                         that.currentProblemType = "other";
                         that.$store.state.answer[that.problemNo] >= 0 ? that.comp.answer = that.$store.state.answer[that.problemNo] : that.comp.answer = "";
@@ -180,7 +181,7 @@ export default {
             let div = document.createElement('div');
             div.setAttribute('id','answeringZone');
             that.$refs.answeringZone.$el.appendChild(div);
-            if (ret.data.problemType == "select"){
+            if (ret.data.problemType == "select" || ret.data.problemType == "multi"){
                 let options = [];
                 ret.data.options = JSON.parse(ret.data.options);
                 for (let value in ret.data.options){
@@ -191,7 +192,7 @@ export default {
                 comp = new Action({
                     propsData:{
                         options:options,  // a list
-                        isMultiple:false // true or false
+                        isMultiple:ret.data.problemType == "select" ? false : true // true or false
                     },
                     attr:{
 
@@ -208,8 +209,10 @@ export default {
         showDialog:function(){
             let that = this;
             let unfinished = [];
+            console.log("that.comp.selected:" + that.comp.selected);
+            that.$store.state.answer[that.problemNo] = that.comp.selected;
             for(let i in that.$store.state.answer) {
-                if (that.$store.state.answer[i] == -1) unfinished.push(i + 1);
+                if (that.$store.state.answer[i] === Infinity) unfinished.push(i + 1);
             }
             if (unfinished.length == 0) that.submitText = "确定提交吗？";
             else that.submitText = "您尚有" + unfinished.length + "题未完成，分别为：" + unfinished.toString() + "，确定要提交吗？";
@@ -221,13 +224,12 @@ export default {
             that.isLoading = true;
             that.isSubmit = false;
             let answer = [];
-            console.log("that.comp.selected:" + that.comp.selected);
-            that.$store.state.answer[that.problemNo] = that.comp.selected;
+            
             console.log(that.$store.state.answer);
             for(let i in that.$store.state.answer){
                 answer.push(that.$store.state.answer[i]);
             }
-            console.log(answer);
+            console.log("answer:" + answer);
             that.$request.post('/submit',answer).then( ret => {
                 that.problemAlertType = "success";
                 that.isShowProgress = false;
@@ -251,8 +253,7 @@ export default {
             that.isSubmitSuccess = false;
             that.$store.state.answer = {};
             setTimeout(() => {
-                that.$router.push('/index').catch( err => console.log(err));
-                that.$router.push('/problem').catch( err => console.log(err));
+                that.$router.go(0).catch( err => console.log(err));
             },200);
         },
         backToIndex:function(){
