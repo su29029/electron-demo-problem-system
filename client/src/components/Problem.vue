@@ -98,7 +98,8 @@ export default {
         submitText:"",
         submitSuccessText:"",
         isSubmit:false,
-        isSubmitSuccess:false
+        isSubmitSuccess:false,
+        currentProblemType:""
     }),
     components:{
         SelectProblem,
@@ -154,7 +155,13 @@ export default {
                 that.$request.get('/getProblem?flag=' + flag).then( ret => {
                     that.comp = that.generateProblem(ret);
                     flag == 1 ? that.problemNo++ : that.problemNo--;
-                    that.$store.state.answer[that.problemNo] >= 0 ? that.comp.selected = that.$store.state.answer[that.problemNo] : that.comp.selected = -1;
+                    if (ret.data.problemType == "select"){
+                        that.currentProblemType = "select";
+                        that.$store.state.answer[that.problemNo] >= 0 ? that.comp.selected = that.$store.state.answer[that.problemNo] : that.comp.selected = -1;
+                    } else if (ret.data.problemType == "other"){
+                        that.currentProblemType = "other";
+                        that.$store.state.answer[that.problemNo] >= 0 ? that.comp.answer = that.$store.state.answer[that.problemNo] : that.comp.answer = "";
+                    }
                     that.isShowProgress = false;
                     that.isLoading = false;
                 }).catch( err => {
@@ -169,16 +176,16 @@ export default {
         },
         generateProblem:function(ret){  // testing
             let that = this, comp = {};
+            that.$refs.answeringZone.$el.innerHTML = "";
+            let div = document.createElement('div');
+            div.setAttribute('id','answeringZone');
+            that.$refs.answeringZone.$el.appendChild(div);
             if (ret.data.problemType == "select"){
                 let options = [];
                 ret.data.options = JSON.parse(ret.data.options);
                 for (let value in ret.data.options){
                     options.push({content:ret.data.options[value], value:value});
-                }
-                that.$refs.answeringZone.$el.innerHTML = "";
-                let div = document.createElement('div');
-                div.setAttribute('id','answeringZone');
-                that.$refs.answeringZone.$el.appendChild(div);
+                }   
                 that.problemContent = ret.data.problemContent;
                 let Action = Vue.extend(SelectProblem);
                 comp = new Action({
@@ -190,8 +197,10 @@ export default {
 
                     }
                 }).$mount("#answeringZone");
-            } else {
-
+            } else if (ret.data.problemType == "other"){
+                that.problemContent = ret.data.problemContent;
+                let Action = Vue.extend(OtherProblem);
+                comp = new Action({}).$mount("answeringZone");
             }
             
             return comp;
