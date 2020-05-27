@@ -32,7 +32,8 @@ module.exports = {
           ]
         },
         "linux": {
-        }
+        	
+	}
       }
     }
   }
