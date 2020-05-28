@@ -23,13 +23,4 @@ public class LoginHandlerInterceptor implements HandlerInterceptor {
         }
     }
     
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        System.out.println("postHandle" + response.toString());
-        response.setHeader("Set-Cookie", "aa");
-    }
-
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        System.out.println("afterCompletion" + response.toString());
-        response.setHeader("Set-Cookie", "aa");
-    }
 }

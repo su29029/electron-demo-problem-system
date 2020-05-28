@@ -1,11 +1,9 @@
 <template>
   <div id="index">
     <Navigator id="navigator"></Navigator>
-    <!-- <v-container> -->
       <v-alert :type="status" v-if="isShowAlert" style="position:absolute;width:100%;">
         {{selectResult}}
       </v-alert>
-    <!-- </v-container> -->
     
     <v-container style="margin-top:5%">
       

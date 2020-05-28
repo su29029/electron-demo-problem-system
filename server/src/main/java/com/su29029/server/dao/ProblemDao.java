@@ -35,4 +35,7 @@ public interface ProblemDao {
     @Select("select problemType from ${language} where id = #{id}")
     String checkProblemType(@Param("language") String language, @Param("id") int id);
 
+    @Update("update users set score=#{score} where username=#{username}")
+    int updateUserScore(@Param("score") int score, @Param("username") String username);
+
 }

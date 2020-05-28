@@ -34,7 +34,6 @@ export default {
     }),
     created:function(){
         let that = this;
-        console.log(this.$route.name);
         that.profile = this.$route.name === "Profile" ? "/index" : "/profile";
         that.btn1 = this.$route.name === "Profile" ? "返回主页" : "我的信息";
         if (this.$store.state.user) {

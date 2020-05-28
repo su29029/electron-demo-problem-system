@@ -119,7 +119,7 @@ export default {
                     that.isConfirming = false;
                     that.isShowProgress = false;
                     that.isShowProblemZone = {display: "block"};
-                    
+                    that.$store.state.answer = {};
                     that.comp = that.generateProblem(ret);
                     if (ret.data.problemType == "select"){
                         that.currentProblemType = "select";
@@ -133,7 +133,6 @@ export default {
                         that.comp.answer = "";
                     }
                     that.problemNo++;
-                    console.log(that.comp);
                 }).catch( err => {
                     that.isShowProgress = false;
                     that.isConfirming = false;
@@ -160,16 +159,8 @@ export default {
                 that.isShowProgress = true;
                 that.isLoading = true;
             }
-            if (that.currentProblemType == "select" ){
-                console.log("that.comp.selected:" + that.comp.selected);
-                that.$store.state.answer[that.problemNo] = that.comp.selected >= 0 ? that.comp.selected : Infinity;
-            } else if (that.currentProblemType == "multi") {
-                console.log("that.comp.selected:" + that.comp.selected);
-                that.$store.state.answer[that.problemNo] = that.comp.selected.length > 0 ? that.comp.selected.sort((a,b) => {return a - b}).toString() : Infinity;
-            } else {
-                console.log("that.comp.answer:" + that.comp.answer);
-                that.$store.state.answer[that.problemNo] = that.comp.answer;
-            }
+            
+            that.saveAnswer();
             
             if ((flag == 1 && that.problemNo <= that.problemNumber) || (flag == -1 && that.problemNo > 1)){
                 that.$request.get('/getProblem?flag=' + flag).then( ret => {
@@ -185,10 +176,10 @@ export default {
                             for(let i = 0; i < answer.length; i++) {
                                 answer[i] = parseInt(answer[i]);
                             }
-                            that.$store.state.answer[that.problemNo] = answer;
+                            that.comp.selected = answer; // a list
                         } else {
                             that.$store.state.answer[that.problemNo] = -1;
-                        }       
+                        }
                     } else if (ret.data.problemType == "other"){
                         that.currentProblemType = "other";
                         that.$store.state.answer[that.problemNo] ? that.comp.answer = that.$store.state.answer[that.problemNo] : that.comp.answer = "";
@@ -236,16 +227,26 @@ export default {
             
             return comp;
         },
+        saveAnswer:function(){
+            let that = this;
+            if (that.currentProblemType == "select" ){
+                that.$store.state.answer[that.problemNo] = that.comp.selected >= 0 ? that.comp.selected : Infinity;
+            } else if (that.currentProblemType == "multi") {
+                that.$store.state.answer[that.problemNo] = that.comp.selected.length > 0 ? that.comp.selected.sort((a,b) => {return a - b}).toString() : Infinity;
+            } else {
+                that.$store.state.answer[that.problemNo] = that.comp.answer;
+            }
+        },
         showDialog:function(){
             let that = this;
             let unfinished = [];
-            console.log("that.comp.selected:" + that.comp.selected);
-            that.$store.state.answer[that.problemNo] = that.comp.selected;
+            
+            that.saveAnswer();
             for(let i in that.$store.state.answer) {
-                if (that.$store.state.answer[i] === Infinity) unfinished.push(i + 1);
+                if (that.$store.state.answer[i] === Infinity || that.$store.state.answer[i] === "") unfinished.push(i);
             }
             if (unfinished.length == 0) that.submitText = "确定提交吗？";
-            else that.submitText = "您尚有" + unfinished.length + "题未完成，分别为：" + unfinished.toString() + "，确定要提交吗？";
+            else that.submitText = "您尚有" + unfinished.length + "题未完成，分别为：" + unfinished.join(",") + "，确定要提交吗？";
             that.isSubmit = true;
         },
         submit:function(){
@@ -255,11 +256,9 @@ export default {
             that.isSubmit = false;
             let answer = [];
             
-            console.log(that.$store.state.answer);
             for(let i in that.$store.state.answer){
                 answer.push(that.$store.state.answer[i]);
             }
-            console.log("answer:" + answer);
             that.$request.post('/submit',answer).then( ret => {
                 that.problemAlertType = "success";
                 that.isShowProgress = false;
@@ -272,6 +271,7 @@ export default {
             }).catch( err => {
                 that.isShowProgress = false;
                 that.isLoading = false;
+                that.problemAlertType = "error";
                 that.isShowAlert = true;
                 that.problemAlert = "Something error.Please check your network and try again.";
                 console.log(err);

@@ -23,17 +23,17 @@ public class ProblemService {
     private List<Integer> nextProblemId;
     private List<Integer> previousProblemId;
     private HashMap<Integer,String> problemAnswer;
+    private String currentUser;
     private String language;
 
     public Message prepareProblem(UserSelectedProblemInformation userSelectedProblemInformation){
         nextProblemId = new ArrayList<Integer>();
         previousProblemId = new ArrayList<Integer>();
         problemAnswer = new HashMap<Integer, String>();
+        currentUser = userSelectedProblemInformation.getUser().getUsername();
         language = userSelectedProblemInformation.getLanguage();
-        System.out.println(userSelectedProblemInformation.getLanguage());
-        System.out.println(userSelectedProblemInformation.getDifficulty());
-        System.out.println(userSelectedProblemInformation.getProblemNumber());
         if (!language.equals("C")) return new Message("Not Support", 400);
+        System.out.println("user:" + currentUser + " is ready.");
         for(int i = 0; i < userSelectedProblemInformation.getProblemNumber();){
             int id = new Random().nextInt(20);
             if (nextProblemId.indexOf(id) == -1 && id != 0){
@@ -53,14 +53,11 @@ public class ProblemService {
             nextProblemId.add(previousProblemId.get(previousProblemId.size() - 1));
             previousProblemId.remove(previousProblemId.size() - 1);
         }
-        System.out.println("previousProblemId" + previousProblemId.toString());
-        System.out.println("nextProblemId" + nextProblemId.toString());
         int current = previousProblemId.get(previousProblemId.size() - 1);
         System.out.println("current:" + current);
         String chart = "problem_language_" + language;
         
         String problemType = problemDao.checkProblemType(chart,current);
-        System.out.println(problemType);
         
         if (problemType.equals("select") || problemType.equals("multi")){
             SelectProblem problem = new SelectProblem();
@@ -88,6 +85,7 @@ public class ProblemService {
                 correctNumber++;
             }
         }
+        problemDao.updateUserScore(correctNumber * previousProblemId.size(), currentUser);
         return new User(null,null,correctNumber);
     }
 }

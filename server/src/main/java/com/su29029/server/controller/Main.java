@@ -79,7 +79,6 @@ public class Main {
 
     @RequestMapping(value = "/selectProblem", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public Message setProblemOption(@RequestBody UserSelectedProblemInformation userSelectedProblemInformation, HttpServletRequest request, HttpSession session) {
-        System.out.println("user:" + userSelectedProblemInformation.getUser().getUsername() + " is ready.");
         return problemService.prepareProblem(userSelectedProblemInformation);
     }
 
